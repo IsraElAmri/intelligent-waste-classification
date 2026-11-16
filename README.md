@@ -52,9 +52,6 @@ biological      [   0       0      0      0       0      0       0       386    
 
 ```
 intelligent-waste-classification/
-├── docs/
-│   ├── internship_final_report.pdf    # Full technical internship report
-│   └── presentation.pptx              # Executive presentation slides
 ├── notebooks/
 │   └── waste_classification_resnet50v2.ipynb  # Interactive experiments & training
 ├── src/
@@ -97,13 +94,6 @@ result = predict_tta(model, image_path="sample_waste.jpg", confidence_threshold=
 print(f"Predicted Class: {result['class']}")
 print(f"Confidence: {result['confidence']:.2%}")
 ```
-
----
-
-## 📜 Documentation & Reports
-Detailed methodology, hyperparameter exploration, and operational context are available in:
-- [Technical Final Report](docs/internship_final_report.pdf)
-- [Project Presentation](docs/presentation.pptx)
 
 ---
 
