@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Datasets & Large Models
+*.h5
+*.keras
+*.tar.gz
+*.zip
+data/raw/
+data/processed/
+
+# OS & Editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

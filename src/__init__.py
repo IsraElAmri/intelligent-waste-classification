@@ -1,0 +1,1 @@
+"""Industrial Waste Classification package."""
