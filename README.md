@@ -1,104 +1,87 @@
-# Intelligent Industrial Waste Classification System
+# Waste Classification with ResNet50V2
 
-[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11-blue?logo=python)](https://www.python.org/)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange?logo=tensorflow)](https://tensorflow.org/)
-[![ResNet50V2](https://img.shields.io/badge/Backbone-ResNet50V2-green)](https://keras.io/api/applications/resnet/)
-[![Validation Accuracy](https://img.shields.io/badge/Accuracy-98.23%25-brightgreen)](#-performance-benchmarks)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15+-FF6F00?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
+[![Validation Accuracy](https://img.shields.io/badge/Validation%20Accuracy-98.23%25-brightgreen)](notebooks/waste_classification_resnet50v2.ipynb)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **Deep Learning Waste Classification System designed during an AI & Machine Learning Internship at Leoni Wiring Systems (Messadine, Tunisia).**  
-> Identifies **8 distinct waste categories** across **6,400+ images** with **98.23% validation accuracy**, utilizing transfer learning, class weighting, and test-time augmentation (TTA).
+An 8-class image classification pipeline using transfer learning with ResNet50V2 to categorize waste streams. Developed during an AI and machine learning internship at Leoni Wiring Systems (IT Department, Messadine, Tunisia).
 
----
+## Dataset and Scope
 
-## 📌 Project Overview
+- **Dataset**: Derived from the Kaggle Garbage Classification dataset (8 classes used, glass types merged, clothes and shoes excluded); exact upstream preparation not documented.
+- **Dataset Confirmation**: Confirmed directly from the executed notebook (`notebooks/waste_classification_resnet50v2.ipynb` Cell 1, 2, and 6), which processes the local folder `Garbage_classification` with 8 categories (`battery`, `biological`, `cardboard`, `glass`, `metal`, `paper`, `plastic`, `trash`).
+- **Split & Sample Counts**: Tied directly to notebook Cell 6 generator outputs:
+  - 5,120 training images (`Found 5120 images belonging to 8 classes`)
+  - 2,771 validation images (`Found 2771 images belonging to 8 classes`)
+  - 7,891 total images evaluated.
+  - No separate held-out test split was used; reported metrics reflect the validation split used for checkpoint selection.
+- **Class Balance**: Classes are moderately imbalanced (validation support ranges from 288 in battery/biological/trash to 386 in cardboard). Balanced class weighting was applied during training.
+- **Model Checkpoints**: Trained weights (`.h5` / `.keras`) exceed GitHub storage limits and are gitignored. The notebook contains the complete training execution and outputs. The pipeline in `src/train.py` is aligned with the notebook parameters but was not retrained separately.
 
-Industrial production environments generate heterogeneous waste streams. Efficient recycling and compliance require accurate, real-time sorting. This project develops an end-to-end computer vision pipeline capable of classifying industrial waste with high precision, low false-positive rates, and resilience to lighting/orientation changes.
+## Architecture and Training
 
-### 🌟 Key Highlights
-- **Architecture**: Transfer learning utilizing **ResNet50V2** pre-trained on ImageNet, fine-tuned with a customized classification head.
-- **8 Target Categories**: `cardboard`, `glass`, `metal`, `paper`, `plastic`, `trash`, `battery`, `biological`.
-- **Training Strategy**: Two-phase fine-tuning (frozen backbone warmup followed by unfreezing the top 40 residual layers with differential learning rates).
-- **Class Imbalance Mitigation**: Skewed class distributions handled with compute-weighted loss weighting and targeted data augmentation.
-- **Inference Robustness**: Test-Time Augmentation (TTA) with rotation and flip averaging, coupled with a confidence thresholding gate ($p \ge 0.75$) to route uncertain items for manual review.
+1. **Backbone**: ResNet50V2 pretrained on ImageNet.
+2. **Classification Head**: GlobalAveragePooling2D, Batch Normalization, Dropout(0.5), Dense(512, ReLU, L2=1e-3), Batch Normalization, Dropout(0.3), Dense(256, ReLU, L2=1e-3), Batch Normalization, Dropout(0.2), Dense(8, Softmax).
+3. **Phase 1 (Warmup)**: Frozen backbone, Adam optimizer ($lr = 10^{-4}$), 30 epochs.
+4. **Phase 2 (Fine-Tuning)**: Top 30 backbone layers unfrozen, Adam optimizer ($lr = 10^{-5}$), 50 epochs.
+5. **Data Augmentation**: Training generator applies rotation (30°), width/height shifts (0.2), zoom (0.2), shear (0.15), and horizontal flips. Validation generator uses rescale-only normalization.
 
----
+## Validation Results
 
-## 📊 Performance Benchmarks
+Evaluated on the 2,771-sample validation split:
 
-| Metric | Score | Details |
-|---|---|---|
-| **Overall Validation Accuracy** | **98.23%** | Evaluated on held-out validation set |
-| **Top-1 Accuracy** | **98.23%** | Over 8 waste categories |
-| **Dataset Scale** | **6,400+ Images** | Balanced & augmented |
-| **Inference Latency** | **~24 ms / image** | GPU accelerated |
+- **Validation Accuracy**: 98.23% (2,722 / 2,771 correct).
+- **Test-Time Augmentation (TTA)**: 98.27% (marginal gain over standard inference).
 
-### 🎯 Confusion Matrix Summary
-```
-                cardboard  glass  metal  paper  plastic  trash  battery  biological
-cardboard       [ 384       0      1      1       0      0       0         0      ]
-glass           [   1     380      0      2       0      0       0         0      ]
-metal           [   7       1    373      0       0      1       0         0      ]
-paper           [   0       0      0    377       3      0       4         0      ]
-plastic         [   0       0      0      8     363      0       1         0      ]
-trash           [   0       0      0      0       0    379       2         0      ]
-battery         [   0       0      1      0       0      0     381         0      ]
-biological      [   0       0      0      0       0      0       0       386      ]
-```
+### Per-Class Validation Breakdown
 
----
+| Category | Validation Support | Correct Predictions | Accuracy | Precision | Recall | F1-Score |
+|---|---|---|---|---|---|---|
+| Cardboard | 386 | 384 | 99.5% | 0.9796 | 0.9948 | 0.9871 |
+| Glass | 383 | 380 | 99.2% | 0.9948 | 0.9922 | 0.9935 |
+| Metal | 382 | 373 | 97.6% | 0.9973 | 0.9764 | 0.9868 |
+| Paper | 384 | 377 | 98.2% | 0.9593 | 0.9818 | 0.9704 |
+| Plastic | 372 | 363 | 97.6% | 0.9680 | 0.9758 | 0.9719 |
+| Trash | 288 | 285 | 99.0% | 0.9828 | 0.9896 | 0.9862 |
+| Battery | 288 | 274 | 95.1% | 0.9821 | 0.9514 | 0.9665 |
+| Biological | 288 | 286 | 99.3% | 1.0000 | 0.9931 | 0.9965 |
 
-## 🏗️ Repository Architecture
+### Error Analysis (Notebook Cell 28)
+
+The model's weakest category is **battery** (274/288 correct, 95.14% recall), with primary misclassifications distributed into trash and metal. The two most frequent individual off-diagonal confusions across the entire validation set are:
+1. `plastic → paper`: 8 misclassifications
+2. `metal → cardboard`: 7 misclassifications
+
+## Repository Structure
 
 ```
 intelligent-waste-classification/
-├── notebooks/
-│   └── waste_classification_resnet50v2.ipynb  # Interactive experiments & training
-├── src/
-│   ├── __init__.py
-│   ├── model.py                      # ResNet50V2 architecture + head definition
-│   ├── train.py                      # Two-phase training pipeline
-│   └── predict.py                    # Inference with TTA & confidence gating
 ├── .gitignore
+├── LICENSE
+├── README.md
 ├── requirements.txt
-└── README.md
+├── notebooks/
+│   └── waste_classification_resnet50v2.ipynb
+└── src/
+    ├── dataset.py
+    ├── model.py
+    ├── predict.py
+    └── train.py
 ```
 
----
+## Getting Started
 
-## 🚀 Quick Start Guide
-
-### 1. Installation
 ```bash
-git clone https://github.com/IsraElAmri/intelligent-waste-classification.git
-cd intelligent-waste-classification
 pip install -r requirements.txt
+
+# Run the training pipeline
+python src/train.py
+
+# Run prediction on a single image
+python src/predict.py --image path/to/sample.jpg
 ```
 
-### 2. Training the Model
-```python
-from src.train import train_pipeline
+## License
 
-# Trains Phase 1 & Phase 2, saving the best weights automatically
-model = train_pipeline(data_dir="path/to/dataset", output_model_path="best_waste_classifier.h5")
-```
-
-### 3. Inference with Test-Time Augmentation (TTA)
-```python
-import tensorflow as tf
-from src.predict import predict_tta
-
-model = tf.keras.models.load_model("best_waste_classifier.h5")
-result = predict_tta(model, image_path="sample_waste.jpg", confidence_threshold=0.80)
-
-print(f"Predicted Class: {result['class']}")
-print(f"Confidence: {result['confidence']:.2%}")
-```
-
----
-
-## 👩‍💻 Author
-**Isra El Amri**  
-Mathematical Engineering & Modeling Student at ENSIT  
-AI & Machine Learning Enthusiast  
-Contact: [elamriisra3@gmail.com](mailto:elamriisra3@gmail.com)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

@@ -1,5 +1,5 @@
 """
-Model architecture for Industrial Waste Classification using ResNet50V2.
+Model architecture for Waste Classification using ResNet50V2.
 """
 import tensorflow as tf
 from tensorflow.keras.applications import ResNet50V2
@@ -33,7 +33,7 @@ def build_resnet50v2_classifier(num_classes=8, input_shape=(224, 224, 3), dropou
         Dense(256, activation='relu', kernel_regularizer=l2(l2_factor)),
         Dropout(dropout_rate / 2),
         Dense(num_classes, activation='softmax', dtype='float32')
-    ], name="Industrial_Waste_Classifier_ResNet50V2")
+    ], name="Waste_Classifier_ResNet50V2")
 
     return model, base_model
 
