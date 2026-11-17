@@ -9,7 +9,7 @@ An 8-class image classification pipeline using transfer learning with ResNet50V2
 
 ## Dataset and Scope
 
-- **Dataset**: Derived from the Kaggle Garbage Classification dataset (8 classes used, glass types merged, clothes and shoes excluded); exact upstream preparation not documented.
+- **Dataset**: Derived from the Kaggle Garbage Classification dataset; the notebook uses an 8-class folder version (battery, biological, cardboard, glass, metal, paper, plastic, trash). Exact preparation of the 8-class set is not documented.
 - **Dataset Confirmation**: Confirmed directly from the executed notebook (`notebooks/waste_classification_resnet50v2.ipynb` Cell 1, 2, and 6), which processes the local folder `Garbage_classification` with 8 categories (`battery`, `biological`, `cardboard`, `glass`, `metal`, `paper`, `plastic`, `trash`).
 - **Split & Sample Counts**: Tied directly to notebook Cell 6 generator outputs:
   - 5,120 training images (`Found 5120 images belonging to 8 classes`)
